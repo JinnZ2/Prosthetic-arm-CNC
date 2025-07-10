@@ -58,3 +58,23 @@ node prosthetic_cnc_system.js
 
 Requires only Node.js, no dependencies.
 
+##  Golden Ratio Fractal Codec (Compression + Pattern Analysis)
+
+This module compresses and analyzes numeric data using φ self-similarity, Fibonacci scaling, and fractal pattern recognition.
+
+Key features:
+- Golden spiral geometry & pattern generation
+- Recursive φ-scale segment correlation
+- Fractal detection + data compression
+- Reconstructive decoder with residual healing
+- Error analysis (MSE, PSNR)
+- Bio-similar signal test data generator
+
+Use Cases:
+- Fractal signal compression
+- Bio-inspired CNC optimization
+- Symbolic AI memory encoding
+- Fibonacci data analytics
+
+➡See: [`Phi_fractal_codec.js`](./Phi_fractal_codec.js)
+
