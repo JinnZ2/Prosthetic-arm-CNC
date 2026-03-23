@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden Ratio Prosthetic Arm - Interactive Simulation</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #e0e0e0; font-family: 'Courier New', monospace; overflow-x: hidden; }
+h1 { text-align: center; padding: 20px; color: #f0c040; font-size: 1.4em; }
+.tabs { display: flex; justify-content: center; gap: 8px; padding: 10px; flex-wrap: wrap; }
+.tab { background: #1a1a2e; border: 1px solid #333; color: #aaa; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-family: inherit; font-size: 0.85em; }
+.tab.active { background: #2a1a0e; border-color: #f0c040; color: #f0c040; }
+.panel { display: none; padding: 20px; max-width: 1000px; margin: 0 auto; }
+.panel.active { display: block; }
+canvas { display: block; margin: 10px auto; background: #0f0f18; border: 1px solid #333; border-radius: 4px; }
+.controls { text-align: center; margin: 10px 0; }
+.controls label { margin: 0 8px; font-size: 0.85em; }
+.controls input[type=range] { vertical-align: middle; width: 120px; }
+.controls select, .controls button { background: #1a1a2e; color: #e0e0e0; border: 1px solid #444; padding: 4px 10px; border-radius: 3px; font-family: inherit; cursor: pointer; }
+.info { background: #111; border: 1px solid #222; padding: 12px; margin: 10px 0; border-radius: 4px; font-size: 0.85em; line-height: 1.6; }
+.info b { color: #f0c040; }
+.golden { color: #f0c040; }
+</style>
+</head>
+<body>
+<h1>&#x03C6; Golden Ratio Prosthetic Arm Simulator</h1>
+<div class="tabs">
+  <button class="tab active" onclick="showPanel('socket')">Socket Design</button>
+  <button class="tab" onclick="showPanel('sensors')">EMG Sensors</button>
+  <button class="tab" onclick="showPanel('toolpath')">CNC Toolpath</button>
+  <button class="tab" onclick="showPanel('patterns')">Bio Patterns</button>
+  <button class="tab" onclick="showPanel('spiral')">Golden Spiral</button>
+</div>
+
+<!-- Socket Design Panel -->
+<div id="socket" class="panel active">
+  <div class="controls">
+    <label>Circumference (mm): <input type="range" id="circ" min="150" max="400" value="280" oninput="drawSocket()"><span id="circVal">280</span></label>
+    <label>Length (mm): <input type="range" id="rlen" min="100" max="300" value="200" oninput="drawSocket()"><span id="rlenVal">200</span></label>
+  </div>
+  <canvas id="cSocket" width="700" height="450"></canvas>
+  <div class="info" id="socketInfo"></div>
+</div>
+
+<!-- EMG Sensors Panel -->
+<div id="sensors" class="panel">
+  <div class="controls">
+    <label>Sensors: <input type="range" id="sCount" min="2" max="12" value="8" oninput="drawSensors()"><span id="sCountVal">8</span></label>
+  </div>
+  <canvas id="cSensors" width="700" height="500"></canvas>
+  <div class="info" id="sensorInfo"></div>
+</div>
+
+<!-- CNC Toolpath Panel -->
+<div id="toolpath" class="panel">
+  <div class="controls">
+    <label>Pass: <select id="passType" onchange="drawToolpath()"><option value="roughing">Roughing</option><option value="finishing">Finishing</option><option value="both">Both</option></select></label>
+    <button onclick="animateToolpath()">Animate</button>
+  </div>
+  <canvas id="cToolpath" width="700" height="500"></canvas>
+  <div class="info" id="toolpathInfo"></div>
+</div>
+
+<!-- Bio Patterns Panel -->
+<div id="patterns" class="panel">
+  <div class="controls">
+    <label>Pattern: <select id="patType" onchange="drawPattern()"><option value="honeycomb">Honeycomb</option><option value="leaf">Leaf Venation</option><option value="fractal">Fractal Tree</option><option value="voronoi">Voronoi Organic</option></select></label>
+  </div>
+  <canvas id="cPatterns" width="700" height="500"></canvas>
+  <div class="info" id="patternInfo"></div>
+</div>
+
+<!-- Golden Spiral Panel -->
+<div id="spiral" class="panel">
+  <div class="controls">
+    <label>Points: <input type="range" id="spPts" min="10" max="200" value="80" oninput="drawSpiral()"><span id="spPtsVal">80</span></label>
+  </div>
+  <canvas id="cSpiral" width="700" height="500"></canvas>
+  <div class="info" id="spiralInfo"></div>
+</div>
+
+<script>
+const PHI = (1 + Math.sqrt(5)) / 2;
+const PHI_INV = 1 / PHI;
+const GOLDEN_ANGLE = 137.5077640844;
+const DEG = Math.PI / 180;
+
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  var fn = { socket: drawSocket, sensors: drawSensors, toolpath: drawToolpath, patterns: drawPattern, spiral: drawSpiral };
+  if (fn[id]) fn[id]();
+}
+
+/* ─── Socket Design ─── */
+function drawSocket() {
+  var circ = +document.getElementById('circ').value;
+  var rlen = +document.getElementById('rlen').value;
+  document.getElementById('circVal').textContent = circ;
+  document.getElementById('rlenVal').textContent = rlen;
+  var proxD = circ / Math.PI;
+  var distD = proxD * PHI_INV;
+  var len = Math.min(rlen * 0.85, proxD * PHI);
+  var wall = { proximal: 4, middle: 4 * PHI_INV, distal: 4 * PHI_INV * PHI_INV };
+
+  var c = document.getElementById('cSocket'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  var cx = c.width / 2, cy = 40, scale = 2.5;
+
+  // Draw outer socket profile
+  ctx.beginPath();
+  ctx.strokeStyle = '#f0c040';
+  ctx.lineWidth = 2;
+  for (var i = 0; i <= 40; i++) {
+    var t = i / 40;
+    var d = proxD + (distD - proxD) * Math.pow(t, PHI_INV);
+    var x = cx + (d / 2) * scale;
+    var y = cy + t * len * scale;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Mirror side
+  ctx.beginPath();
+  for (var i = 0; i <= 40; i++) {
+    var t = i / 40;
+    var d = proxD + (distD - proxD) * Math.pow(t, PHI_INV);
+    var x = cx - (d / 2) * scale;
+    var y = cy + t * len * scale;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Inner wall
+  ctx.strokeStyle = '#806020';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  for (var i = 0; i <= 40; i++) {
+    var t = i / 40;
+    var d = proxD + (distD - proxD) * Math.pow(t, PHI_INV);
+    var w = wall.proximal + (wall.distal - wall.proximal) * t;
+    var x = cx + (d / 2 - w) * scale;
+    var y = cy + t * len * scale;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  for (var i = 0; i <= 40; i++) {
+    var t = i / 40;
+    var d = proxD + (distD - proxD) * Math.pow(t, PHI_INV);
+    var w = wall.proximal + (wall.distal - wall.proximal) * t;
+    var x = cx - (d / 2 - w) * scale;
+    var y = cy + t * len * scale;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dimension labels
+  ctx.fillStyle = '#888';
+  ctx.font = '11px Courier New';
+  ctx.fillText('Proximal: ' + proxD.toFixed(1) + 'mm', cx + proxD / 2 * scale + 10, cy + 10);
+  ctx.fillText('Distal: ' + distD.toFixed(1) + 'mm', cx + distD / 2 * scale + 10, cy + len * scale - 5);
+  ctx.fillText('Length: ' + len.toFixed(1) + 'mm', cx - proxD / 2 * scale - 100, cy + len * scale / 2);
+
+  // PHI ratio marker
+  ctx.fillStyle = '#f0c040';
+  ctx.fillText('\u03C6 ratio = ' + (proxD / distD).toFixed(4), cx - 60, cy + len * scale + 25);
+
+  document.getElementById('socketInfo').innerHTML =
+    '<b>Socket Design (Golden Ratio Taper)</b><br>' +
+    'Proximal \u00D8: ' + proxD.toFixed(1) + 'mm | Distal \u00D8: ' + distD.toFixed(1) + 'mm | Ratio: <span class="golden">\u03C6 = ' + (proxD / distD).toFixed(4) + '</span><br>' +
+    'Wall: ' + wall.proximal.toFixed(1) + 'mm \u2192 ' + wall.middle.toFixed(1) + 'mm \u2192 ' + wall.distal.toFixed(1) + 'mm (each layer \u00D7 \u03C6\u207B\u00B9)<br>' +
+    'Socket length: ' + len.toFixed(1) + 'mm | The taper follows a \u03C6-power curve for natural fit.';
+}
+
+/* ─── EMG Sensors ─── */
+function drawSensors() {
+  var count = +document.getElementById('sCount').value;
+  document.getElementById('sCountVal').textContent = count;
+  var c = document.getElementById('cSensors'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  var cx = c.width / 2, cy = c.height / 2, r = 180;
+
+  // Socket circle (top view)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Golden angle lines and sensors
+  var sensors = [];
+  for (var i = 0; i < count; i++) {
+    var angle = i * GOLDEN_ANGLE * DEG;
+    var sr = r * 0.85;
+    var x = cx + sr * Math.cos(angle);
+    var y = cy + sr * Math.sin(angle);
+    sensors.push({ x: x, y: y, angle: (i * GOLDEN_ANGLE) % 360, primary: i < 2 });
+
+    // Connection line
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = i < 2 ? '#f0c04066' : '#4040f066';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Sensor dot
+    ctx.beginPath();
+    ctx.arc(x, y, i < 2 ? 10 : 7, 0, Math.PI * 2);
+    ctx.fillStyle = i < 2 ? '#f0c040' : '#4060f0';
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = '9px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(i + 1, x, y + 3);
+  }
+
+  // Center label
+  ctx.fillStyle = '#666';
+  ctx.font = '11px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('Top View', cx, cy - r - 10);
+  ctx.fillText('Golden Angle = ' + GOLDEN_ANGLE.toFixed(2) + '\u00B0', cx, cy + r + 20);
+
+  document.getElementById('sensorInfo').innerHTML =
+    '<b>EMG Sensor Layout (Golden Angle Distribution)</b><br>' +
+    'Sensors placed at <span class="golden">137.508\u00B0</span> intervals \u2014 the golden angle ensures maximum spacing without clustering.<br>' +
+    '<span class="golden">Gold</span> = primary (2), <span style="color:#4060f0">Blue</span> = secondary (' + (count - 2) + ')<br>' +
+    'This is the same angle sunflowers use for seed packing \u2014 nature\'s optimal coverage pattern.';
+}
+
+/* ─── CNC Toolpath ─── */
+var tpAnim = null;
+function drawToolpath() {
+  if (tpAnim) { cancelAnimationFrame(tpAnim); tpAnim = null; }
+  var c = document.getElementById('cToolpath'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  var cx = c.width / 2, cy = c.height / 2, pass = document.getElementById('passType').value;
+
+  drawToolpathFrame(ctx, cx, cy, pass, 999);
+  document.getElementById('toolpathInfo').innerHTML =
+    '<b>CNC Toolpath Visualization</b><br>' +
+    'Roughing: helical passes remove bulk material. Finishing: fine spiral passes for surface quality.<br>' +
+    'Stepover and depth scale by <span class="golden">\u03C6\u207B\u00B9</span> for optimal chip load and surface finish.';
+}
+
+function drawToolpathFrame(ctx, cx, cy, pass, maxStep) {
+  var step = 0;
+  // Roughing: helical descent
+  if (pass === 'roughing' || pass === 'both') {
+    ctx.beginPath();
+    ctx.strokeStyle = '#f04040';
+    ctx.lineWidth = 1.5;
+    for (var i = 0; i < 300 && step < maxStep; i++, step++) {
+      var t = i / 300;
+      var r = 120 - t * 60;
+      var a = t * Math.PI * 8;
+      var x = cx + r * Math.cos(a);
+      var y = cy + r * Math.sin(a) * 0.4 - 60 + t * 120;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  // Finishing: tight spiral
+  if (pass === 'finishing' || pass === 'both') {
+    ctx.beginPath();
+    ctx.strokeStyle = '#40f040';
+    ctx.lineWidth = 1;
+    for (var i = 0; i < 400 && step < maxStep; i++, step++) {
+      var t = i / 400;
+      var r = 55 + t * 60;
+      var a = t * Math.PI * 16;
+      var x = cx + r * Math.cos(a);
+      var y = cy + r * Math.sin(a) * 0.4 + t * 80 - 40;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  return step;
+}
+
+function animateToolpath() {
+  if (tpAnim) { cancelAnimationFrame(tpAnim); tpAnim = null; }
+  var c = document.getElementById('cToolpath'), ctx = c.getContext('2d');
+  var cx = c.width / 2, cy = c.height / 2, pass = document.getElementById('passType').value;
+  var frame = 0, total = pass === 'both' ? 700 : pass === 'roughing' ? 300 : 400;
+  function tick() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    drawToolpathFrame(ctx, cx, cy, pass, frame);
+    frame += 3;
+    if (frame < total) tpAnim = requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+/* ─── Bio Patterns ─── */
+function drawPattern() {
+  var c = document.getElementById('cPatterns'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  var cx = c.width / 2, cy = c.height / 2;
+  var pat = document.getElementById('patType').value;
+
+  if (pat === 'honeycomb') drawHoneycomb(ctx, cx, cy);
+  else if (pat === 'leaf') drawLeaf(ctx, cx, cy);
+  else if (pat === 'fractal') drawFractalTree(ctx, cx, cy + 180, -Math.PI / 2, 100, 5);
+  else if (pat === 'voronoi') drawVoronoi(ctx, cx, cy);
+
+  var descs = {
+    honeycomb: 'Metamaterial honeycomb with inner cavities scaled by <span class="golden">\u03C6\u207B\u00B9</span>. Maximizes strength-to-weight ratio.',
+    leaf: 'Leaf venation pattern using golden angle branching. Models natural structural support.',
+    fractal: 'Fractal tree with branches splitting at <span class="golden">\u00B1\u03C6 angle</span>, length scaling by \u03C6\u207B\u00B9 per level.',
+    voronoi: 'Organic Voronoi cells seeded at golden angle positions. Creates natural stress distribution.'
+  };
+  document.getElementById('patternInfo').innerHTML = '<b>Bio-Inspired Pattern</b><br>' + descs[pat];
+}
+
+function drawHoneycomb(ctx, cx, cy) {
+  var size = 30;
+  var rows = 7, cols = 7;
+  for (var r = -3; r <= 3; r++) {
+    for (var q = -3; q <= 3; q++) {
+      var x = cx + size * 1.5 * q;
+      var y = cy + size * Math.sqrt(3) * (r + q * 0.5);
+      drawHex(ctx, x, y, size, '#f0c040', 1.5);
+      drawHex(ctx, x, y, size * PHI_INV, '#806020', 1);
+    }
+  }
+}
+
+function drawHex(ctx, cx, cy, size, color, lw) {
+  ctx.beginPath();
+  for (var i = 0; i < 6; i++) {
+    var a = Math.PI / 3 * i - Math.PI / 6;
+    var x = cx + size * Math.cos(a);
+    var y = cy + size * Math.sin(a);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+}
+
+function drawLeaf(ctx, cx, cy) {
+  // Main leaf outline
+  ctx.beginPath();
+  ctx.strokeStyle = '#40c040';
+  ctx.lineWidth = 2;
+  for (var i = 0; i <= 64; i++) {
+    var t = i / 64;
+    var angle = t * Math.PI;
+    var r = 180 * Math.sin(angle) * Math.pow(t, PHI_INV);
+    var x = cx + r * Math.cos(angle - Math.PI / 2);
+    var y = cy - 200 * t + 100;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Mirror
+  ctx.beginPath();
+  for (var i = 0; i <= 64; i++) {
+    var t = i / 64;
+    var angle = t * Math.PI;
+    var r = 180 * Math.sin(angle) * Math.pow(t, PHI_INV);
+    var x = cx - r * Math.cos(angle - Math.PI / 2);
+    var y = cy - 200 * t + 100;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Veins (golden angle branching)
+  ctx.strokeStyle = '#208020';
+  ctx.lineWidth = 1;
+  for (var v = 0; v < 8; v++) {
+    var t = (v + 1) / 9;
+    var baseY = cy - 200 * t + 100;
+    var spread = 120 * Math.sin(t * Math.PI) * Math.pow(t, PHI_INV);
+    ctx.beginPath();
+    ctx.moveTo(cx, baseY);
+    ctx.quadraticCurveTo(cx + spread * 0.5, baseY - 15, cx + spread, baseY - 5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, baseY);
+    ctx.quadraticCurveTo(cx - spread * 0.5, baseY - 15, cx - spread, baseY - 5);
+    ctx.stroke();
+  }
+  // Stem
+  ctx.strokeStyle = '#40c040';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + 100);
+  ctx.lineTo(cx, cy - 100);
+  ctx.stroke();
+}
+
+function drawFractalTree(ctx, cx, cy, angle, len, depth) {
+  if (depth === 0 || len < 2) return;
+  var x2 = cx + len * Math.cos(angle);
+  var y2 = cy + len * Math.sin(angle);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = 'hsl(' + (40 + depth * 20) + ', 70%, ' + (30 + depth * 10) + '%)';
+  ctx.lineWidth = depth * 0.8;
+  ctx.stroke();
+  var branchAngle = GOLDEN_ANGLE * DEG / 2;
+  drawFractalTree(ctx, x2, y2, angle - branchAngle, len * PHI_INV, depth - 1);
+  drawFractalTree(ctx, x2, y2, angle + branchAngle * PHI_INV, len * PHI_INV, depth - 1);
+}
+
+function drawVoronoi(ctx, cx, cy) {
+  var seeds = [];
+  for (var i = 0; i < 20; i++) {
+    var a = i * GOLDEN_ANGLE * DEG;
+    var r = 30 + i * 12;
+    seeds.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+  }
+  // Draw cells as connections between nearby seeds
+  ctx.strokeStyle = '#f0c04088';
+  ctx.lineWidth = 1;
+  for (var i = 0; i < seeds.length; i++) {
+    for (var j = i + 1; j < seeds.length; j++) {
+      var dx = seeds[i].x - seeds[j].x, dy = seeds[i].y - seeds[j].y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 90) {
+        ctx.beginPath();
+        ctx.moveTo(seeds[i].x, seeds[i].y);
+        // Organic curve
+        var mx = (seeds[i].x + seeds[j].x) / 2 + (Math.random() - 0.5) * 20;
+        var my = (seeds[i].y + seeds[j].y) / 2 + (Math.random() - 0.5) * 20;
+        ctx.quadraticCurveTo(mx, my, seeds[j].x, seeds[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+  // Draw seed points
+  for (var i = 0; i < seeds.length; i++) {
+    ctx.beginPath();
+    ctx.arc(seeds[i].x, seeds[i].y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#f0c040';
+    ctx.fill();
+  }
+}
+
+/* ─── Golden Spiral ─── */
+function drawSpiral() {
+  var pts = +document.getElementById('spPts').value;
+  document.getElementById('spPtsVal').textContent = pts;
+  var c = document.getElementById('cSpiral'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  var cx = c.width / 2, cy = c.height / 2;
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#f0c040';
+  ctx.lineWidth = 2;
+  for (var i = 0; i < pts; i++) {
+    var a = i * GOLDEN_ANGLE * DEG;
+    var r = 3 * Math.sqrt(i);
+    var x = cx + r * Math.cos(a);
+    var y = cy + r * Math.sin(a);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Dots
+  for (var i = 0; i < pts; i++) {
+    var a = i * GOLDEN_ANGLE * DEG;
+    var r = 3 * Math.sqrt(i);
+    ctx.beginPath();
+    ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'hsl(' + (i * GOLDEN_ANGLE % 360) + ', 70%, 60%)';
+    ctx.fill();
+  }
+
+  document.getElementById('spiralInfo').innerHTML =
+    '<b>Golden Spiral / Phyllotaxis</b><br>' +
+    pts + ' points placed at <span class="golden">137.508\u00B0</span> intervals with r = 3\u221A(n).<br>' +
+    'This is the Vogel spiral \u2014 the same arrangement used for comfort channel placement on the socket.';
+}
+
+// Initial draw
+drawSocket();
+</script>
+</body>
+</html>
