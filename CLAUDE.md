@@ -10,9 +10,10 @@ Golden Ratio CNC Prosthetic Arm System — a pure JavaScript prototype that gene
 
 ```
 Prosthetic-arm-CNC/
-├── Prosthetic-CNC-system.js      # Core prosthetic socket design & CNC toolpath generation
-├── Enhanced-golden-CNC-system.js  # Advanced patterns (honeycomb, Voronoi, fractal trees)
-├── Phi-fractal-codec.js           # Golden ratio data compression & fractal analysis
+├── prosthetic-cnc-system.js      # Core prosthetic socket design & CNC toolpath generation
+├── enhanced-golden-cnc-system.js  # Advanced patterns (honeycomb, Voronoi, fractal trees)
+├── phi-fractal-codec.js           # Golden ratio data compression & fractal analysis
+├── CLAUDE.md                      # AI assistant context (this file)
 ├── README.md                      # Project documentation
 ├── LICENSE                        # MIT License
 └── .gitignore
@@ -20,7 +21,7 @@ Prosthetic-arm-CNC/
 
 ## Source Files
 
-### Prosthetic-CNC-system.js (~595 lines)
+### prosthetic-cnc-system.js (~595 lines)
 - **Class**: `ProstheticCNCSystem`
 - Core socket design with golden ratio tapering
 - EMG sensor positioning using golden angle (137.5°)
@@ -28,14 +29,14 @@ Prosthetic-arm-CNC/
 - G-code output, cost/time estimation
 - **Entry point**: `new ProstheticCNCSystem().runDemo()`
 
-### Enhanced-golden-CNC-system.js (~609 lines)
+### enhanced-golden-cnc-system.js (~609 lines)
 - **Class**: `EnhancedCNCGoldenSystem`
 - Bio-inspired pattern generation (leaf, honeycomb, Voronoi)
 - Fractal tree structures, golden spiral patterns
 - Material-specific feedrate optimization (aluminum, steel, titanium, carbon fiber, brass, plastic, wood)
 - **Entry point**: `new EnhancedCNCGoldenSystem().demonstrateEnhancedCapabilities()`
 
-### Phi-fractal-codec.js (~412 lines)
+### phi-fractal-codec.js (~413 lines)
 - **Class**: `GoldenRatioFractalCodec`
 - Data compression using φ self-similarity and Fibonacci scaling
 - Fractal pattern detection and recursive correlation
@@ -46,24 +47,29 @@ Prosthetic-arm-CNC/
 
 ```bash
 # Core prosthetic system demo
-node Prosthetic-CNC-system.js
+node prosthetic-cnc-system.js
 
 # Enhanced CNC capabilities demo
-node Enhanced-golden-CNC-system.js
+node enhanced-golden-cnc-system.js
 
 # Fractal codec demo
-node Phi-fractal-codec.js
+node phi-fractal-codec.js
 ```
 
 All scripts produce console output demonstrating their capabilities. No arguments required.
 
 ## Key Conventions
 
+### File Naming
+- Lowercase kebab-case for all source files (e.g., `prosthetic-cnc-system.js`)
+
 ### Code Style
 - ES6+ class-based architecture, one main class per file
 - No module imports/exports between files — each file is self-contained
 - Mathematical constants defined at the top of each class (PHI, PHI_INV, GOLDEN_ANGLE, FIBONACCI)
-- Console.log-based output with formatted section headers
+- Block comments (`/* */`) for file headers
+- JSDoc-style (`/** */`) for method documentation
+- Console.log-based output with `=== Section Title ===` formatted headers
 - Methods return structured objects with computed results
 
 ### Mathematical Constants Used Throughout
@@ -73,9 +79,10 @@ All scripts produce console output demonstrating their capabilities. No argument
 - Fibonacci sequences for scaling and spacing
 
 ### Naming
-- PascalCase for class names
-- camelCase for methods and variables
-- Descriptive method names (e.g., `generateGoldenSpiralToolpath`, `optimizeEMGSensorLayout`)
+- PascalCase for class names (`ProstheticCNCSystem`, `EnhancedCNCGoldenSystem`)
+- camelCase for methods, variables, and object properties
+- UPPER_SNAKE_CASE for class-level constants (`this.PHI`, `this.FEED_RATES`)
+- Descriptive method names (e.g., `generateGoldenSpiralToolpath`, `calculateAdvancedFeedrate`)
 
 ## Development Notes
 

@@ -1,17 +1,17 @@
-Enhanced CNC Golden Ratio Fractal Toolpath System
-
-- Expanded applications and improved algorithms
-  */
+/*
+ * Enhanced CNC Golden Ratio Fractal Toolpath System
+ *
+ * Expanded applications and improved algorithms
+ */
 
 class EnhancedCNCGoldenSystem {
-constructor() {
-this.PHI = (1 + Math.sqrt(5)) / 2;
-this.PHI_INV = 1 / this.PHI;
-this.GOLDEN_ANGLE = 137.5077640844;
-this.FIBONACCI_SEQUENCE = this.generateFibonacci(20);
+    constructor() {
+        this.PHI = (1 + Math.sqrt(5)) / 2;
+        this.PHI_INV = 1 / this.PHI;
+        this.GOLDEN_ANGLE = 137.5077640844;
+        this.FIBONACCI_SEQUENCE = this.generateFibonacci(20);
 
-```
-    // Enhanced feed rate matrices
+        // Enhanced feed rate matrices
     this.FEED_RATES = {
         RAPID: 3000,
         CUTTING: 800,
@@ -495,7 +495,7 @@ analyzePatternEfficiency(toolpath) {
         cuttingMoves: 0,
         directionChanges: 0,
         accelerationEvents: 0,
-        efficiency_score: 0
+        efficiencyScore: 0
     };
     
     let previousAngle = 0;
@@ -537,7 +537,7 @@ analyzePatternEfficiency(toolpath) {
     const smoothnessRatio = 1 - (analysis.directionChanges / analysis.cuttingMoves);
     const accelerationRatio = 1 - (analysis.accelerationEvents / toolpath.length);
     
-    analysis.efficiency_score = (rapidRatio * this.PHI_INV + 
+    analysis.efficiencyScore = (rapidRatio * this.PHI_INV + 
                                smoothnessRatio * this.PHI + 
                                accelerationRatio * 1.0) / 3;
     
@@ -591,7 +591,6 @@ demonstrateEnhancedCapabilities() {
         stepover: stepover
     };
 }
-```
 
 }
 
@@ -599,7 +598,7 @@ demonstrateEnhancedCapabilities() {
 const enhancedSystem = new EnhancedCNCGoldenSystem();
 const results = enhancedSystem.demonstrateEnhancedCapabilities();
 
-console.log(”\n=== System Capabilities Summary ===”);
+console.log("\n=== System Capabilities Summary ===");
 console.log(`Bio-inspired patterns: ✓ (${results.leafMoves} moves generated)`);
 console.log(`Metamaterial structures: ✓ (${results.honeycombMoves} moves generated)`);
 console.log(`Organic flowing designs: ✓ (${results.voronoiMoves} moves generated)`);

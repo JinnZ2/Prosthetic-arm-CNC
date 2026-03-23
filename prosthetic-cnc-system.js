@@ -1,6 +1,6 @@
-Prosthetic Arm CNC Manufacturing System
-
-
+/*
+ * Prosthetic Arm CNC Manufacturing System
+ *
  * Golden Ratio Optimization for Myoelectric Prosthetics
  */
 
