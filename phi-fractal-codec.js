@@ -1,5 +1,6 @@
-Golden Ratio Fractal Coding System
-
+/*
+ * Golden Ratio Fractal Coding System
+ *
  * A compression algorithm based on golden ratio self-similarity
  */
 
