@@ -1,3 +1,6 @@
+> Read first: [READING_PROTOCOL.md](READING_PROTOCOL.md) (how to read this repo).
+> Map, not prescription. Errors are data. Check it. Built for the need, revisable.
+
 This open-source project uses natural geometry to reinvent prosthetics.
 By combining the golden ratio (1.618) with CNC precision and EMG sensor optimization, this system designs and manufactures prosthetic sockets with mathematically ideal comfort, fit, and signal performance.
 
